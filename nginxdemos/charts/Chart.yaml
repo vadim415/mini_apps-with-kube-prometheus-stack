@@ -1,0 +1,6 @@
+apiVersion: v2
+name: hello
+description: A simple Helm chart for Hello nginx application
+type: application
+version: 0.1.0
+appVersion: "0.4-plain-text"

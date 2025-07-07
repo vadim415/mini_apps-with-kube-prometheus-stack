@@ -1,0 +1,126 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "hello.fullname" . }}
+  labels:
+    {{- include "hello.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: {{ .Values.strategy.type }}
+    {{- if eq .Values.strategy.type "RollingUpdate" }}
+    rollingUpdate:
+      maxSurge: {{ .Values.strategy.rollingUpdate.maxSurge }}
+      maxUnavailable: {{ .Values.strategy.rollingUpdate.maxUnavailable }}
+    {{- end }}
+  selector:
+    matchLabels:
+      {{- include "hello.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "hello.selectorLabels" . | nindent 8 }}
+      annotations:
+        {{- if .Values.prometheus.enabled }}
+        prometheus.io/scrape: {{ .Values.prometheus.deployment.scrape | quote }}
+        prometheus.io/port: {{ .Values.prometheus.deployment.port | quote }}
+        prometheus.io/path: {{ .Values.prometheus.deployment.path | quote }}
+        {{- end }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      containers:
+      - name: hello
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - containerPort: 80
+        {{- if .Values.resources.hello }}
+        resources:
+          {{- toYaml .Values.resources.hello | nindent 10 }}
+        {{- end }}
+        {{- if .Values.probes.hello.liveness.enabled }}
+        livenessProbe:
+          httpGet:
+            path: {{ .Values.probes.hello.liveness.httpGet.path }}
+            port: {{ .Values.probes.hello.liveness.httpGet.port }}
+          initialDelaySeconds: {{ .Values.probes.hello.liveness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.probes.hello.liveness.periodSeconds }}
+          timeoutSeconds: {{ .Values.probes.hello.liveness.timeoutSeconds }}
+          failureThreshold: {{ .Values.probes.hello.liveness.failureThreshold }}
+        {{- end }}
+        {{- if .Values.probes.hello.readiness.enabled }}
+        readinessProbe:
+          httpGet:
+            path: {{ .Values.probes.hello.readiness.httpGet.path }}
+            port: {{ .Values.probes.hello.readiness.httpGet.port }}
+          initialDelaySeconds: {{ .Values.probes.hello.readiness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.probes.hello.readiness.periodSeconds }}
+          timeoutSeconds: {{ .Values.probes.hello.readiness.timeoutSeconds }}
+          failureThreshold: {{ .Values.probes.hello.readiness.failureThreshold }}
+        {{- end }}
+        {{- if .Values.probes.hello.startup.enabled }}
+        startupProbe:
+          httpGet:
+            path: {{ .Values.probes.hello.startup.httpGet.path }}
+            port: {{ .Values.probes.hello.startup.httpGet.port }}
+          initialDelaySeconds: {{ .Values.probes.hello.startup.initialDelaySeconds }}
+          periodSeconds: {{ .Values.probes.hello.startup.periodSeconds }}
+          timeoutSeconds: {{ .Values.probes.hello.startup.timeoutSeconds }}
+          failureThreshold: {{ .Values.probes.hello.startup.failureThreshold }}
+        {{- end }}
+      - name: nginx-exporter
+        image: "{{ .Values.nginxExporter.image.repository }}:{{ .Values.nginxExporter.image.tag }}"
+        imagePullPolicy: {{ .Values.nginxExporter.image.pullPolicy }}
+        args:
+        - "-nginx.scrape-uri={{ .Values.nginxExporter.scrapeUri }}"
+        ports:
+        - name: metrics
+          containerPort: 9113
+        {{- if .Values.resources.nginxExporter }}
+        resources:
+          {{- toYaml .Values.resources.nginxExporter | nindent 10 }}
+        {{- end }}
+        {{- if .Values.probes.nginxExporter.liveness.enabled }}
+        livenessProbe:
+          httpGet:
+            path: {{ .Values.probes.nginxExporter.liveness.httpGet.path }}
+            port: {{ .Values.probes.nginxExporter.liveness.httpGet.port }}
+          initialDelaySeconds: {{ .Values.probes.nginxExporter.liveness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.probes.nginxExporter.liveness.periodSeconds }}
+          timeoutSeconds: {{ .Values.probes.nginxExporter.liveness.timeoutSeconds }}
+          failureThreshold: {{ .Values.probes.nginxExporter.liveness.failureThreshold }}
+        {{- end }}
+        {{- if .Values.probes.nginxExporter.readiness.enabled }}
+        readinessProbe:
+          httpGet:
+            path: {{ .Values.probes.nginxExporter.readiness.httpGet.path }}
+            port: {{ .Values.probes.nginxExporter.readiness.httpGet.port }}
+          initialDelaySeconds: {{ .Values.probes.nginxExporter.readiness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.probes.nginxExporter.readiness.periodSeconds }}
+          timeoutSeconds: {{ .Values.probes.nginxExporter.readiness.timeoutSeconds }}
+          failureThreshold: {{ .Values.probes.nginxExporter.readiness.failureThreshold }}
+        {{- end }}
+        {{- if .Values.probes.nginxExporter.startup.enabled }}
+        startupProbe:
+          httpGet:
+            path: {{ .Values.probes.nginxExporter.startup.httpGet.path }}
+            port: {{ .Values.probes.nginxExporter.startup.httpGet.port }}
+          initialDelaySeconds: {{ .Values.probes.nginxExporter.startup.initialDelaySeconds }}
+          periodSeconds: {{ .Values.probes.nginxExporter.startup.periodSeconds }}
+          timeoutSeconds: {{ .Values.probes.nginxExporter.startup.timeoutSeconds }}
+          failureThreshold: {{ .Values.probes.nginxExporter.startup.failureThreshold }}
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

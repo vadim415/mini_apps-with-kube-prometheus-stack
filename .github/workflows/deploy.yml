@@ -11,8 +11,12 @@ jobs:
     runs-on: vadim-Inspiron-5548
     env:
       KUBECONFIG: /home/vadim/.kube/config
+      HELM_RELEASE: nginxdemos
+      HELM_NAMESPACE: demo
+      HELM_NAMESPACE_PROM: kube-prometheus-stack
 
 #self-hosted
+    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -23,12 +27,41 @@ jobs:
         run: |
           export KUBECONFIG=$HOME/.kube/config
           kubectl config use-context minikube
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: v3.12.0 
+      - name: Create namespace if not exists
+        run: |
+          kubectl get ns $HELM_NAMESPACE || kubectl create ns $HELM_NAMESPACE        
       - name: Checkout repository
         uses: actions/checkout@v3      
       - name: List files and show cwd
         run: |
           ls -la && pwd
+      - name: Configure kubectl
+        uses: azure/k8s-set-context@v3
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG_PRODUCTION }}
 
+      - name: Deploy Helm Chart
+        run: |
+          helm upgrade --install $HELM_RELEASE ./nginxdemos \
+            --namespace $HELM_NAMESPACE \
+            --values ./nginxdemos/values.yaml
+      - name: Add Helm repositories
+        run: |
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm repo update
+
+      - name: Deploy Kube-prometheus-stack
+        run: |
+          helm install kube-prometheus-stack \
+            --create-namespace --namespace kube-prometheus-stack \
+            --prometheus-community/kube-prometheus-stack \
+            --wait \
+            --timeout 5m
       - name: Dry-run apply Kubernetes manifests
         run: |
           echo "Validating ./deploy_manual_componenets"

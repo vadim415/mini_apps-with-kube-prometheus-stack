@@ -1,0 +1,133 @@
+# Default values for hello chart
+replicaCount: 1
+
+image:
+  repository: nginxdemos/hello
+  tag: "0.4-plain-text"
+  pullPolicy: IfNotPresent
+
+nginxExporter:
+  image:
+    repository: nginx/nginx-prometheus-exporter
+    tag: "1.4"
+    pullPolicy: IfNotPresent
+  scrapeUri: "http://127.0.0.1:80/metrics"
+
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: ClusterIP
+  port: 80
+  metricsPort: 9113
+
+ingress:
+  enabled: true
+  className: ""
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/x-forwarded-for: "true"
+  hosts:
+    - host: myown-website.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources:
+  hello:
+    requests:
+      memory: "64Mi"
+      cpu: "50m"
+    limits:
+      memory: "128Mi"
+      cpu: "100m"
+  nginxExporter:
+    requests:
+      memory: "32Mi"
+      cpu: "25m"
+    limits:
+      memory: "64Mi"
+      cpu: "50m"
+
+# Health probes configuration
+probes:
+  hello:
+    liveness:
+      enabled: true
+      httpGet:
+        path: /
+        port: 80
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+    readiness:
+      enabled: true
+      httpGet:
+        path: /
+        port: 80
+      initialDelaySeconds: 5
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 3
+    startup:
+      enabled: true
+      httpGet:
+        path: /
+        port: 80
+      initialDelaySeconds: 5
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 12  # 60 seconds total
+  nginxExporter:
+    liveness:
+      enabled: true
+      httpGet:
+        path: /metrics
+        port: 9113
+      initialDelaySeconds: 15
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+    readiness:
+      enabled: true
+      httpGet:
+        path: /metrics
+        port: 9113
+      initialDelaySeconds: 5
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 3
+    startup:
+      enabled: true
+      httpGet:
+        path: /metrics
+        port: 9113
+      initialDelaySeconds: 10
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 12  # 60 seconds total
+
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 1
+    maxUnavailable: 1
+
+prometheus:
+  enabled: true
+  deployment:
+    scrape: "true"
+    port: "80"
+    path: "/metrics"
+  service:
+    scrape: "true"
+    path: "/"
+    port: "80"
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+podAnnotations: {}
