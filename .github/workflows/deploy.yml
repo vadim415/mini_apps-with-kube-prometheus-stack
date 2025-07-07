@@ -13,7 +13,7 @@ jobs:
     env:
       KUBECONFIG: /home/vadim/.kube/config
 
-
+#self-hosted
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
