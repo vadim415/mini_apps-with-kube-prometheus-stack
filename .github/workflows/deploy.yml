@@ -45,7 +45,7 @@ jobs:
         run: |
           cd nginxdemos 
           helm upgrade hello-app ./charts \
-           -n demo --install --atomic --wait
+           -n demo --install  --wait
             
       - name: Add Helm repositories
         run: |
