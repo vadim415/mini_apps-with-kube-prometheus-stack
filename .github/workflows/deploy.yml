@@ -8,7 +8,7 @@ on:
 
 jobs:
   validate:                    
-    runs-on: self-hosted
+    runs-on: vadim-Inspiron-5548
     env:
       KUBECONFIG: /home/vadim/.kube/config
 
