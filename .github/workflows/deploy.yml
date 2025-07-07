@@ -43,9 +43,10 @@ jobs:
 
       - name: Deploy Helm Chart
         run: |
-          helm upgrade --install $HELM_RELEASE ./nginxdemos \
-            --namespace $HELM_NAMESPACE \
-            --values ./nginxdemos/charts/values.yaml
+          cd nginxdemos \
+          helm upgrade hello-app ./charts \
+           -n demo --install --atomic --wait
+            
       - name: Add Helm repositories
         run: |
           helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
@@ -56,8 +57,7 @@ jobs:
           helm install kube-prometheus-stack \
             --create-namespace --namespace kube-prometheus-stack \
             --prometheus-community/kube-prometheus-stack \
-            --wait \
-            --timeout 5m
+            --wait 
       - name: Dry-run apply Kubernetes manifests
         run: |
           echo "Validating ./deploy_manual_componenets"
