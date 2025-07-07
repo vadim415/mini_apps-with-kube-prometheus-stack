@@ -61,6 +61,16 @@ jobs:
           else
             echo "If ube-prometheus-stack  need to skip"
           fi
+      - name: Check and apply Kubernetes Secret 2
+        run: |
+          if ! kubectl get secret hello-app-secret -n demo >/dev/null 2>&1; then
+            kubectl apply -f ./deploy_manual_componenets/secret.yaml -n demo
+          else
+            echo "Secret already exists — skipping."
+          fi    
+      - name: Validate Secret YAML
+        run: |
+          kubectl apply --dry-run=client -f ./deploy_manual_componenets/secret.yaml -n demo    
       - name: Dry-run apply Kubernetes manifests
         run: |
           echo "Validating ./deploy_manual_componenets"
