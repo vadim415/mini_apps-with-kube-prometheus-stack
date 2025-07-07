@@ -43,7 +43,7 @@ jobs:
 
       - name: Deploy Helm Chart
         run: |
-          cd nginxdemos \
+          cd nginxdemos 
           helm upgrade hello-app ./charts \
            -n demo --install --atomic --wait
             
