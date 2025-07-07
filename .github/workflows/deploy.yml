@@ -72,7 +72,26 @@ jobs:
         run: |
           echo "Validating deploy_manual_componenets/service_monitor_prom.yaml"
           kubectl apply --dry-run=client -f ./deploy_manual_componenets/service_monitor_prom.yaml
-
+      - name: Generate and apply Kubernetes Secret
+        env:
+          API_KEY: ${{ secrets.APIKEY }}
+          PASSWORD: ${{ secrets.PASSWORD }}
+        run: |
+          # Validate required secrets exist
+          if [ -z "$API_KEY" ] || [ -z "$PASSWORD" ]; then
+            echo " Error: Required secrets (APIKEY, PASSWORD) are not set"
+            exit 1
+          fi
+          
+          # Create or update secret using kubectl
+          kubectl create secret generic hello-app-secret \
+            --from-literal=apiKey="$APIKEY" \
+            --from-literal=password="$PASSWORD" \
+            --namespace=demo \
+            --dry-run=client -o yaml | kubectl apply -f -
+          
+          echo " Secret 'hello-app-secret' created/updated successfully"
+          
       - name:  Validate Kubernetes secrets/configs
         run: |
           echo " Validating secrets/configs..."
