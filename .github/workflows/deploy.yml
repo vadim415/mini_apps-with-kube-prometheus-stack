@@ -1,0 +1,54 @@
+# .github/workflows/deploy.yml
+name: Testing
+
+on:
+  push:
+    branches: ["master"]
+  pull_request:
+    branches: ["master"]
+
+jobs:
+  validate:                    
+    runs-on: self-hosted
+    env:
+      KUBECONFIG: /home/vadim/.kube/config
+
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Verify cluster connectivity
+        run: |
+          # показує info про кластер (має повернути URL вашого minikube)
+          kubectl cluster-info
+      - name: Set KUBECONFIG
+        run: |
+          export KUBECONFIG=$HOME/.kube/config
+          kubectl config use-context minikube
+      - name: Checkout repository
+        uses: actions/checkout@v3      
+      - name: List files and show cwd
+        run: |
+          ls -la && pwd
+
+      - name: Dry-run apply Kubernetes manifests
+        run: |
+          echo "Validating ./deploy_manual_componenets"
+          kubectl apply --dry-run=client -f ./deploy_manual_componenets/deploy.yaml
+
+      - name: Validate ServiceMonitor prom-stack
+        run: |
+          echo "Validating deploy_manual_componenets/service_monitor_prom.yaml"
+          kubectl apply --dry-run=client -f ./deploy_manual_componenets/service_monitor_prom.yaml
+
+      - name:  Validate Kubernetes secrets/configs
+        run: |
+          echo " Validating secrets/configs..."
+          if [ -f ./k8s/secrets.yaml ]; then
+            kubectl apply --dry-run=client -f ./k8s/secrets.yaml
+          else
+            echo "No secrets.yaml found — skipping..."
+          fi
+
+      - name: Done
+        run: echo "ok"

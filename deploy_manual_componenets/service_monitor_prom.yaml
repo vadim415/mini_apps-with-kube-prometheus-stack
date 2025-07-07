@@ -1,0 +1,18 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: hello-apps
+  labels:
+    release: kube-prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      app: hello
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 10s
+  namespaceSelector:
+    matchNames:
+      - demo
+
