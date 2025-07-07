@@ -39,11 +39,7 @@ jobs:
       - name: List files and show cwd
         run: |
           ls -la && pwd
-      - name: Configure kubectl
-        uses: azure/k8s-set-context@v3
-        with:
-          method: kubeconfig
-          kubeconfig: ${{ secrets.KUBE_CONFIG_PRODUCTION }}
+     
 
       - name: Deploy Helm Chart
         run: |
