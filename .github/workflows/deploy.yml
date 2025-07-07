@@ -45,7 +45,7 @@ jobs:
         run: |
           helm upgrade --install $HELM_RELEASE ./nginxdemos \
             --namespace $HELM_NAMESPACE \
-            --values ./nginxdemos/values.yaml
+            --values ./nginxdemos/charts/values.yaml
       - name: Add Helm repositories
         run: |
           helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
