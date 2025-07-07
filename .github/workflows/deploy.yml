@@ -44,8 +44,9 @@ jobs:
       - name: Deploy Helm Chart
         run: |
           cd nginxdemos 
-          helm upgrade hello-app ./charts \
-           -n demo --install  --wait
+          helm list -n demo | grep hello-app && \
+            helm upgrade hello-app ./charts -n demo --wait || \
+            helm install hello-app ./charts -n demo --wait
             
       - name: Add Helm repositories
         run: |
