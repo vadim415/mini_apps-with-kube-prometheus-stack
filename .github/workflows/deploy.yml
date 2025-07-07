@@ -53,10 +53,14 @@ jobs:
 
       - name: Deploy Kube-prometheus-stack
         run: |
-          helm install kube-prometheus-stack \
-            --create-namespace --namespace kube-prometheus-stack \
-            --prometheus-community/kube-prometheus-stack \
-            --wait 
+          if ! helm status kube-prometheus-stack -n kube-prometheus-stack >/dev/null 2>&1; then
+          helm install kube-prometheus-stack prometheus-community/kube-prometheus-stack \
+            --namespace kube-prometheus-stack \
+            --create-namespace \
+            --wait
+          else
+            echo "If ube-prometheus-stack  need to skip"
+          fi
       - name: Dry-run apply Kubernetes manifests
         run: |
           echo "Validating ./deploy_manual_componenets"
